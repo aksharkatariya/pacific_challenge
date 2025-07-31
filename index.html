@@ -1,3 +1,4 @@
+<!-- FULL CODE REPLACEMENT -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,7 +90,6 @@
 <div class="main-panel">
   <label class="toggle-switch">
     Show Low-Elevation Population
-
     <div class="slider" id="customToggle"></div>
   </label>
   <svg width="900" height="600"></svg>
@@ -112,7 +112,6 @@ const customToggle = document.getElementById("customToggle");
 const zoom = d3.zoom()
   .scaleExtent([1, 8])
   .on("zoom", (event) => svg.selectAll("g.chart-layer").attr("transform", event.transform));
-
 svg.call(zoom);
 
 const chartLayer = svg.append("g").attr("class", "chart-layer");
@@ -135,94 +134,74 @@ const countryCodeMap = {
   "Indonesia": "id"
 };
 
+function getGovActionText(d) {
+  const val = d.local_gov_action_perc;
+  return (val && !isNaN(val)) ? `Local Gov Action: ${val}%` : "Local Gov Action: No Data Available";
+}
+
 function drawCoastal(data) {
   chartLayer.selectAll("*").remove();
-  data.forEach((d, i) => {
+  data.forEach((d) => {
     const [x, y] = projection([+d.Longitude, +d.Latitude]);
     [["10km", "10km_abs", "10km_rel"], ["5km", "5km_abs", "5km_rel"], ["1km", "1km_abs", "1km_rel"]].forEach(([label, absKey, relKey], j) => {
       chartLayer.append("circle")
         .attr("cx", x)
         .attr("cy", y)
-        .attr("r", radius - j * 15)
+        .attr("r", Math.sqrt(+d[relKey]) * 2)
         .attr("fill", bandColors[j])
         .attr("opacity", 0.5)
         .on("mouseover", function (event) {
           tooltip.transition().duration(200).style("opacity", 0.9);
-          tooltip.html(`<strong>${d.Country}</strong><br>${label} from coast:<br>${(+d[absKey]).toLocaleString()} people<br>${(+d[relKey]).toFixed(1)}% of national pop`)
+          tooltip.html(`\<strong\>${d.Country}</strong><br>${label} from coast:<br>${(+d[absKey]).toLocaleString()} people<br><div style='background:#ddd; width:100px; height:10px; display:inline-block;'><div style='width:${(+d[relKey]).toFixed(1)}px; height:10px; background:#4caf50;'></div></div> ${(+d[relKey]).toFixed(1)}%`<br>${getGovActionText(d)}`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 28) + "px");
         })
         .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
     });
-
-    chartLayer.append("circle")
-      .attr("cx", x)
-      .attr("cy", y)
-      .attr("r", 3)
-      .attr("class", "island-core");
-
+    chartLayer.append("circle").attr("cx", x).attr("cy", y).attr("r", 3).attr("class", "island-core");
     const isoCode = countryCodeMap[d.Country];
     if (isoCode) {
       chartLayer.append("image")
-        .attr("x", x - 10)
-        .attr("y", y - 10)
-        .attr("width", 20)
-        .attr("height", 20)
-        .attr("href", `https://flagcdn.com/w40/${isoCode}.png`)
-        .attr("clip-path", "circle(10px)");
+        .attr("x", x - 10).attr("y", y - 10).attr("width", 20).attr("height", 20)
+        .attr("href", `https://flagcdn.com/w40/${isoCode}.png`).attr("clip-path", "circle(10px)");
     }
-
     chartLayer.append("text")
-      .attr("x", x)
-      .attr("y", y + 75)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
-      .attr("fill", "white")
-      .text(d.Country);
+      .attr("x", x).attr("y", y + 75).attr("text-anchor", "middle")
+      .attr("font-size", "12px").attr("fill", "white").text(d.Country);
   });
 }
 
 function drawElevation(data) {
   chartLayer.selectAll("*").remove();
-  data.forEach((d, i) => {
+  data.forEach((d) => {
     const [x, y] = projection([+d.Longitude, +d.Latitude]);
     let stackHeight = 0;
     const bands = [["5M", "5M_N", "5M_PERCENT"], ["10M", "10M_N", "10M_PERCENT"], ["20M", "20M_N", "20M_PERCENT"]];
     bands.forEach(([label, absKey, relKey], j) => {
       const percent = +d[relKey];
-      const height = percent;
+      const height = percent * 0.5;
       const width = 30;
       chartLayer.append("rect")
-        .attr("x", x - width / 2)
-        .attr("y", y - stackHeight - height)
-        .attr("width", width)
-        .attr("height", height)
-        .attr("fill", bandColors[j])
+        .attr("x", x - width / 2).attr("y", y - stackHeight - height)
+        .attr("width", width).attr("height", height).attr("fill", bandColors[j])
         .attr("class", "cylinder")
         .on("mouseover", function (event) {
           tooltip.transition().duration(200).style("opacity", 0.9);
-          tooltip.html(`<strong>${d.Country}</strong><br>${label} elevation:<br>${(+d[absKey]).toLocaleString()} people<br>${percent.toFixed(1)}% of national pop`)
+          tooltip.html(`<strong>${d.Country}</strong><br>${label} elevation:<br>${(+d[absKey]).toLocaleString()} people<br>${percent.toFixed(1)}% of national pop<br>${getGovActionText(d)}`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 28) + "px");
         })
         .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
-
       stackHeight += height;
     });
-
     chartLayer.append("text")
-      .attr("x", x)
-      .attr("y", y + 10)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
-      .attr("fill", "white")
-      .text(d.Country);
+      .attr("x", x).attr("y", y + 10).attr("text-anchor", "middle")
+      .attr("font-size", "12px").attr("fill", "white").text(d.Country);
   });
 }
 
 d3.csv("final_data.csv").then(data => {
   drawCoastal(data);
-
   customToggle.addEventListener("click", function () {
     customToggle.classList.toggle("checked");
     const isChecked = customToggle.classList.contains("checked");
