@@ -141,7 +141,7 @@ function getGovActionText(d) {
 
 function drawCoastal(data) {
   chartLayer.selectAll("*").remove();
-  data.forEach((d, i) => {
+  data.forEach((d) => {
     const [x, y] = projection([+d.Longitude, +d.Latitude]);
     [["10km", "10km_abs", "10km_rel"], ["5km", "5km_abs", "5km_rel"], ["1km", "1km_abs", "1km_rel"]].forEach(([label, absKey, relKey], j) => {
       chartLayer.append("circle")
@@ -152,13 +152,23 @@ function drawCoastal(data) {
         .attr("opacity", 0.5)
         .on("mouseover", function (event) {
           tooltip.transition().duration(200).style("opacity", 0.9);
-          tooltip.html(`<strong>${d.Country}</strong><br>${label} from coast:<br>${(+d[absKey]).toLocaleString()} people<br>${(+d[relKey]).toFixed(1)}% of national pop`)
+          tooltip.html(`<strong>${d.Country}</strong><br>${label} from coast:<br>${(+d[absKey]).toLocaleString()} people<br>${(+d[relKey]).toFixed(1)}% of national pop<br>${getGovActionText(d)}`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 28) + "px");
         })
         .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
     });
-
+    chartLayer.append("circle").attr("cx", x).attr("cy", y).attr("r", 3).attr("class", "island-core");
+    const isoCode = countryCodeMap[d.Country];
+    if (isoCode) {
+      chartLayer.append("image")
+        .attr("x", x - 10).attr("y", y - 10).attr("width", 20).attr("height", 20)
+        .attr("href", `https://flagcdn.com/w40/${isoCode}.png`).attr("clip-path", "circle(10px)");
+    }
+    chartLayer.append("text")
+      .attr("x", x).attr("y", y + 75).attr("text-anchor", "middle")
+      .attr("font-size", "12px").attr("fill", "white").text(d.Country);
+  });
 }
 
 function drawElevation(data) {
