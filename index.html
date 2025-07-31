@@ -66,27 +66,35 @@
 <div class="side-panel">
   <h1>Coastal and Elevation Risk</h1>
   <h2>Interactive Population View</h2>
-  <p>This dashboard visualizes population data near coastlines and in low-elevation zones for key countries. Use the toggle to switch between circular coastal zones and elevation-based cylinders to understand geographic vulnerability to sea level rise and flooding.</p>
+  <p>This dashboard visualizes population data near coastlines and in low-elevation zones for key countries. Use the toggle to switch between circular coastal zones and elevation-based stacked bars to understand geographic vulnerability to sea level rise and flooding.</p>
 </div>
 
 <script>
 const svg = d3.select("svg");
 const tooltip = d3.select(".tooltip");
 
+const zoom = d3.zoom()
+  .scaleExtent([1, 8])
+  .on("zoom", (event) => svg.selectAll("g.chart-layer").attr("transform", event.transform));
+
+svg.call(zoom);
+
+const chartLayer = svg.append("g").attr("class", "chart-layer");
+
 const projection = d3.geoMercator()
-  .center([165, -15]) // centered more to the Pacific islands
-  .scale(900)         // zoomed in
+  .center([165, -15])
+  .scale(900)
   .translate([450, 300]);
 
 const radius = 60;
 const bandColors = d3.schemeCategory10;
 
 function drawCoastal(data) {
-  svg.selectAll("*").remove();
+  chartLayer.selectAll("*").remove();
   data.forEach((d, i) => {
     const [x, y] = projection([+d.Longitude, +d.Latitude]);
     [["10km", "10km_abs", "10km_rel"], ["5km", "5km_abs", "5km_rel"], ["1km", "1km_abs", "1km_rel"]].forEach(([label, absKey, relKey], j) => {
-      svg.append("circle")
+      chartLayer.append("circle")
         .attr("cx", x)
         .attr("cy", y)
         .attr("r", radius - j * 15)
@@ -100,7 +108,7 @@ function drawCoastal(data) {
         })
         .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
     });
-    svg.append("text")
+    chartLayer.append("text")
       .attr("x", x)
       .attr("y", y + 75)
       .attr("text-anchor", "middle")
@@ -110,16 +118,17 @@ function drawCoastal(data) {
 }
 
 function drawElevation(data) {
-  svg.selectAll("*").remove();
+  chartLayer.selectAll("*").remove();
   data.forEach((d, i) => {
     const [x, y] = projection([+d.Longitude, +d.Latitude]);
     let stackHeight = 0;
-    [["5M", "5M_N", "5M_PERCENT"], ["10M", "10M_N", "10M_PERCENT"], ["20M", "20M_N", "20M_PERCENT"]].forEach(([label, absKey, relKey], j) => {
-      const value = +d[absKey];
-      const height = value / 1000;
+    const bands = [["5M", "5M_N", "5M_PERCENT"], ["10M", "10M_N", "10M_PERCENT"], ["20M", "20M_N", "20M_PERCENT"]];
+    bands.forEach(([label, absKey, relKey], j) => {
+      const percent = +d[relKey];
+      const height = percent; // using percentage directly
       const width = 30;
-      const ellipseHeight = 6;
-      svg.append("rect")
+
+      chartLayer.append("rect")
         .attr("x", x - width / 2)
         .attr("y", y - stackHeight - height)
         .attr("width", width)
@@ -128,28 +137,16 @@ function drawElevation(data) {
         .attr("class", "cylinder")
         .on("mouseover", function (event) {
           tooltip.transition().duration(200).style("opacity", 0.9);
-          tooltip.html(`<strong>${d.Country}</strong><br>${label} elevation:<br>${value.toLocaleString()} people<br>${(+d[relKey]).toFixed(1)}% of national pop`)
+          tooltip.html(`<strong>${d.Country}</strong><br>${label} elevation:<br>${(+d[absKey]).toLocaleString()} people<br>${percent.toFixed(1)}% of national pop`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 28) + "px");
         })
         .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
-      svg.append("ellipse")
-        .attr("cx", x)
-        .attr("cy", y - stackHeight)
-        .attr("rx", width / 2)
-        .attr("ry", ellipseHeight)
-        .attr("fill", bandColors[j])
-        .attr("opacity", 0.5);
-      svg.append("ellipse")
-        .attr("cx", x)
-        .attr("cy", y - stackHeight - height)
-        .attr("rx", width / 2)
-        .attr("ry", ellipseHeight)
-        .attr("fill", bandColors[j])
-        .attr("opacity", 0.8);
+
       stackHeight += height;
     });
-    svg.append("text")
+
+    chartLayer.append("text")
       .attr("x", x)
       .attr("y", y + 10)
       .attr("text-anchor", "middle")
