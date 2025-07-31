@@ -249,12 +249,16 @@ d3.csv("final_data.csv").then(data => {
       panelText.textContent = "This mode shows how many people live below 5m, 10m, and 20m from the sea-level elevation bands. Sea-level elevation matters because it directly determines how exposed communities are to the impacts of climate change—especially flooding, storms, and long-term sea-level rise.";
     } else {
       drawCoastal(data);
-      panelTitle.textContent = "Coastal and Elevation Risk";
-      panelSubtitle.textContent = "Interactive Population View";
-      panelText.textContent = "This dashboard visualizes population data near coastlines and in low-elevation zones for key countries. Use the toggle to switch between circular coastal zones and elevation-based stacked bars to understand geographic vulnerability to sea level rise and flooding.";
+      panelTitle.textContent = "Population by Coastal Proximity";
+      panelSubtitle.textContent = "Risk map by coastal proximity";
+      panelText.textContent = "This dashboard visualizes population data around coasts for key Pacific island nations in bands of 1 Kilometer, 5 kilometers, and 10 Kilometers. While the coast is central to Pacific identity and economy, it’s also where climate change hits hardest—making it essential to understand who lives there and how close they are to the rising sea.";
     }
   });
 });
 </script>
+  <div style="position: absolute; bottom: 10px; right: 20px; font-size: 13px; color: white; opacity: 0.7;">
+  By Akshar Katariya
+</div>
+
 </body>
 </html>
