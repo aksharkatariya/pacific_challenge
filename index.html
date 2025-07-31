@@ -119,8 +119,8 @@ svg.call(zoom);
 const chartLayer = svg.append("g").attr("class", "chart-layer");
 
 const projection = d3.geoMercator()
-  .center([165, -15])
-  .scale(900)
+  .center([160, -9])
+  .scale(600)
   .translate([450, 300]);
 
 const radius = 60;
@@ -183,11 +183,11 @@ function drawCoastal(data) {
         .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
     });
     chartLayer.append("circle").attr("cx", x).attr("cy", y).attr("r", 3).attr("class", "island-core");
-    const isoCode = countryCodeMap[d.Country];
-    if (isoCode) {
-      chartLayer.append("image")
-        .attr("x", x - 10).attr("y", y - 10).attr("width", 20).attr("height", 20)
-        .attr("href", `https://flagcdn.com/w40/${isoCode}.png`).attr("clip-path", "circle(10px)");
+ //   const isoCode = countryCodeMap[d.Country];
+//    if (isoCode) {
+//      chartLayer.append("image")
+//        .attr("x", x - 10).attr("y", y - 10).attr("width", 20).attr("height", 20)
+//        .attr("href", `https://flagcdn.com/w40/${isoCode}.png`).attr("clip-path", "circle(10px)");
     }
     chartLayer.append("text")
       .attr("x", x).attr("y", y + 75).attr("text-anchor", "middle")
