@@ -244,9 +244,9 @@ d3.csv("final_data.csv").then(data => {
     const isChecked = customToggle.classList.contains("checked");
     if (isChecked) {
       drawElevation(data);
-      panelTitle.textContent = "Population in Low-Elevation Zones";
-      panelSubtitle.textContent = "Stacked Risk by Altitude";
-      panelText.textContent = "This mode shows how many people live below 5m, 10m, and 20m elevation bands. These groups are vulnerable to storm surges, coastal erosion, and sea-level rise.";
+      panelTitle.textContent = "Population in Low Sea-level Zones";
+      panelSubtitle.textContent = "Risk by elevation";
+      panelText.textContent = "This mode shows how many people live below 5m, 10m, and 20m from the sea-level elevation bands. Sea-level elevation matters because it directly determines how exposed communities are to the impacts of climate change—especially flooding, storms, and long-term sea-level rise.";
     } else {
       drawCoastal(data);
       panelTitle.textContent = "Coastal and Elevation Risk";
