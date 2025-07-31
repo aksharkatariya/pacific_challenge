@@ -152,15 +152,7 @@ function drawCoastal(data) {
         .attr("opacity", 0.5)
         .on("mouseover", function (event) {
           tooltip.transition().duration(200).style("opacity", 0.9);
-          tooltip.html(
-  `<strong>${d.Country}</strong><br>${label} from coast:<br>` +
-  `${(+d[absKey]).toLocaleString()} people<br>` +
-  `<div style='background:#ddd; width:100px; height:10px; display:inline-block; vertical-align:middle;'>` +
-    `<div style='width:${(+d[relKey])}px; height:10px; background:#4caf50;'></div>` +
-  `</div> <span style="margin-left:5px;">${(+d[relKey]).toFixed(1)}%</span><br>` +
-  `${getGovActionText(d)}`
-);
-
+          tooltip.html(`<strong>${d.Country}</strong><br>${label} from coast:<br>${(+d[absKey]).toLocaleString()} people<br>${(+d[relKey]).toFixed(1)}% of national pop<br>${getGovActionText(d)}`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 28) + "px");
         })
