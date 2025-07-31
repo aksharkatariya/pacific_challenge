@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Coastal Population Visualization</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #eef; display: flex; }
+    .tooltip {
+      position: absolute;
+      padding: 6px;
+      background: white;
+      border: 1px solid #999;
+      border-radius: 4px;
+      pointer-events: none;
+      font-size: 14px;
+    }
+    .map-circle {
+      fill: lightblue;
+      stroke: steelblue;
+      stroke-width: 1;
+      opacity: 0.5;
+    }
+    .toggle {
+      margin: 20px;
+      font-size: 16px;
+    }
+    .cylinder {
+      stroke: #333;
+      stroke-width: 0.5;
+    }
+    .main-panel {
+      width: 75%;
+      position: relative;
+    }
+    .side-panel {
+      width: 25%;
+      padding: 20px;
+      background: #fff;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    }
+    .side-panel h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .side-panel h2 {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .side-panel p {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+<div class="main-panel">
+  <label class="toggle">
+    <input type="checkbox" id="toggleView" /> Show Low-Elevation Population
+  </label>
+  <svg width="900" height="600"></svg>
+  <div class="tooltip" style="opacity:0;"></div>
+</div>
+<div class="side-panel">
+  <h1>Coastal and Elevation Risk</h1>
+  <h2>Interactive Population View</h2>
+  <p>This dashboard visualizes population data near coastlines and in low-elevation zones for key countries. Use the toggle to switch between circular coastal zones and elevation-based cylinders to understand geographic vulnerability to sea level rise and flooding.</p>
+</div>
+
+<script>
+const svg = d3.select("svg");
+const tooltip = d3.select(".tooltip");
+
+const projection = d3.geoMercator()
+  .center([90, 0])
+  .scale(140)
+  .translate([450, 300]);
+
+const radius = 60;
+const bandColors = d3.schemeCategory10;
+
+function drawCoastal(data) {
+  svg.selectAll("*").remove();
+  data.forEach((d, i) => {
+    const [x, y] = projection([+d.Longitude, +d.Latitude]);
+    [["10km", "10km_abs", "10km_rel"], ["5km", "5km_abs", "5km_rel"], ["1km", "1km_abs", "1km_rel"]].forEach(([label, absKey, relKey], j) => {
+      svg.append("circle")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("r", radius - j * 15)
+        .attr("fill", bandColors[j])
+        .attr("opacity", 0.5)
+        .on("mouseover", function (event) {
+          tooltip.transition().duration(200).style("opacity", 0.9);
+          tooltip.html(`<strong>${d.Country}</strong><br>${label} from coast:<br>${(+d[absKey]).toLocaleString()} people<br>${(+d[relKey]).toFixed(1)}% of national pop`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
+    });
+    svg.append("text")
+      .attr("x", x)
+      .attr("y", y + 75)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "12px")
+      .text(d.Country);
+  });
+}
+
+function drawElevation(data) {
+  svg.selectAll("*").remove();
+  data.forEach((d, i) => {
+    const [x, y] = projection([+d.Longitude, +d.Latitude]);
+    let stackHeight = 0;
+    [["5M", "5M_N", "5M_PERCENT"], ["10M", "10M_N", "10M_PERCENT"], ["20M", "20M_N", "20M_PERCENT"]].forEach(([label, absKey, relKey], j) => {
+      const value = +d[absKey];
+      const height = value / 1000;
+      const width = 30;
+      const ellipseHeight = 6;
+      svg.append("rect")
+        .attr("x", x - width / 2)
+        .attr("y", y - stackHeight - height)
+        .attr("width", width)
+        .attr("height", height)
+        .attr("fill", bandColors[j])
+        .attr("class", "cylinder")
+        .on("mouseover", function (event) {
+          tooltip.transition().duration(200).style("opacity", 0.9);
+          tooltip.html(`<strong>${d.Country}</strong><br>${label} elevation:<br>${value.toLocaleString()} people<br>${(+d[relKey]).toFixed(1)}% of national pop`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
+      svg.append("ellipse")
+        .attr("cx", x)
+        .attr("cy", y - stackHeight)
+        .attr("rx", width / 2)
+        .attr("ry", ellipseHeight)
+        .attr("fill", bandColors[j])
+        .attr("opacity", 0.5);
+      svg.append("ellipse")
+        .attr("cx", x)
+        .attr("cy", y - stackHeight - height)
+        .attr("rx", width / 2)
+        .attr("ry", ellipseHeight)
+        .attr("fill", bandColors[j])
+        .attr("opacity", 0.8);
+      stackHeight += height;
+    });
+    svg.append("text")
+      .attr("x", x)
+      .attr("y", y + 10)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "12px")
+      .text(d.Country);
+  });
+}
+
+d3.csv("final_data.csv").then(data => {
+  drawCoastal(data);
+  d3.select("#toggleView").on("change", function () {
+    if (this.checked) {
+      drawElevation(data);
+    } else {
+      drawCoastal(data);
+    }
+  });
+});
+</script>
+</body>
+</html>
