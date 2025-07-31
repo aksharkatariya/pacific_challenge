@@ -164,9 +164,9 @@ function drawCoastal(data) {
       chartLayer.append("circle")
         .attr("cx", x)
         .attr("cy", y)
-        .attr("r", radius - j * 12)
+        .attr("r", radius - j * 20)
         .attr("fill", bandColors[j])
-        .attr("opacity", 0.9)
+        .attr("opacity", 0.85)
         .on("mouseover", function (event) {
           tooltip.transition().duration(200).style("opacity", 0.9);
           tooltip.html(`
