@@ -101,6 +101,8 @@
   <p id="panel-text">This dashboard visualizes population data near coastlines and in low-elevation zones for key countries. Use the toggle to switch between circular coastal zones and elevation-based stacked bars to understand geographic vulnerability to sea level rise and flooding.</p>
 </div>
 
+<!-- Skipping unchanged <head> and <style> for brevity, they remain as in the previous message -->
+
 <script>
 const svg = d3.select("svg");
 const tooltip = d3.select(".tooltip");
@@ -134,9 +136,21 @@ const countryCodeMap = {
   "Indonesia": "id"
 };
 
-function getGovActionText(d) {
-  const val = d.local_gov_action_perc;
-  return (val && !isNaN(val)) ? `Local Gov Action: ${val}%` : "Local Gov Action: No Data Available";
+function localGovBar(d) {
+  const val = +d.local_gov_action_perc;
+  if (isNaN(val)) {
+    return `<div style="margin-top:5px;">Local Gov Action: <em>No Data Available</em></div>`;
+  } else {
+    return `
+      <div style="margin-top:5px;">Local Gov Action:</div>
+      <div style="display:flex;align-items:center;">
+        <div style="width: 100px; background: #ccc; height: 10px; margin-right: 5px;">
+          <div style="width: ${val.toFixed(1)}%; height: 10px; background: gray;"></div>
+        </div>
+        <span>${val.toFixed(1)}%</span>
+      </div>
+    `;
+  }
 }
 
 function drawCoastal(data) {
@@ -161,7 +175,7 @@ function drawCoastal(data) {
               </div>
               <span>${(+d[relKey]).toFixed(1)}%</span>
             </div>
-            ${getGovActionText(d)}
+            ${localGovBar(d)}
           `)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 28) + "px");
@@ -206,7 +220,7 @@ function drawElevation(data) {
               </div>
               <span>${percent.toFixed(1)}%</span>
             </div>
-            ${getGovActionText(d)}
+            ${localGovBar(d)}
           `)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 28) + "px");
