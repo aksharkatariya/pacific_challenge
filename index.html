@@ -74,8 +74,8 @@ const svg = d3.select("svg");
 const tooltip = d3.select(".tooltip");
 
 const projection = d3.geoMercator()
-  .center([90, 0])
-  .scale(140)
+  .center([165, -15]) // centered more to the Pacific islands
+  .scale(900)         // zoomed in
   .translate([450, 300]);
 
 const radius = 60;
